@@ -1,0 +1,110 @@
+Times: 1
+There are 131072 blocks, and 8 threads each block
+
+ ========== Check cudaMalloc ==========
+ Malloc d_vecA : no error
+ Malloc d_vecB : no error
+ Malloc d_vecC : no error
+
+ ======== Check Data Transfer =========
+ Memory Copy d_vecA : no error
+ Memory Copy d_vecB : no error
+
+ ============ Check Result ============
+ Memcpy h_vecResultFromDevice : no error
+ Result Check : OK!
+
+ ======== Execution Infomation ========
+ Excuetion Time on GPU: 0.00059363199397921562 s
+ Excuetion Time on CPU: 0.00627500005066394806 s
+ Speed up = 10.570522
+ ======================================
+
+Times: 2
+There are 131072 blocks, and 8 threads each block
+
+ ========== Check cudaMalloc ==========
+ Malloc d_vecA : no error
+ Malloc d_vecB : no error
+ Malloc d_vecC : no error
+
+ ======== Check Data Transfer =========
+ Memory Copy d_vecA : no error
+ Memory Copy d_vecB : no error
+
+ ============ Check Result ============
+ Memcpy h_vecResultFromDevice : no error
+ Result Check : OK!
+
+ ======== Execution Infomation ========
+ Excuetion Time on GPU: 0.00058543996419757605 s
+ Excuetion Time on CPU: 0.00635399995371699333 s
+ Speed up = 10.853375
+ ======================================
+
+Times: 3
+There are 131072 blocks, and 8 threads each block
+
+ ========== Check cudaMalloc ==========
+ Malloc d_vecA : no error
+ Malloc d_vecB : no error
+ Malloc d_vecC : no error
+
+ ======== Check Data Transfer =========
+ Memory Copy d_vecA : no error
+ Memory Copy d_vecB : no error
+
+ ============ Check Result ============
+ Memcpy h_vecResultFromDevice : no error
+ Result Check : OK!
+
+ ======== Execution Infomation ========
+ Excuetion Time on GPU: 0.00058774399803951383 s
+ Excuetion Time on CPU: 0.00627599982544779778 s
+ Speed up = 10.678118
+ ======================================
+
+Times: 4
+There are 131072 blocks, and 8 threads each block
+
+ ========== Check cudaMalloc ==========
+ Malloc d_vecA : no error
+ Malloc d_vecB : no error
+ Malloc d_vecC : no error
+
+ ======== Check Data Transfer =========
+ Memory Copy d_vecA : no error
+ Memory Copy d_vecB : no error
+
+ ============ Check Result ============
+ Memcpy h_vecResultFromDevice : no error
+ Result Check : OK!
+
+ ======== Execution Infomation ========
+ Excuetion Time on GPU: 0.00058278400683775544 s
+ Excuetion Time on CPU: 0.00627799984067678452 s
+ Speed up = 10.772429
+ ======================================
+
+Times: 5
+There are 131072 blocks, and 8 threads each block
+
+ ========== Check cudaMalloc ==========
+ Malloc d_vecA : no error
+ Malloc d_vecB : no error
+ Malloc d_vecC : no error
+
+ ======== Check Data Transfer =========
+ Memory Copy d_vecA : no error
+ Memory Copy d_vecB : no error
+
+ ============ Check Result ============
+ Memcpy h_vecResultFromDevice : no error
+ Result Check : OK!
+
+ ======== Execution Infomation ========
+ Excuetion Time on GPU: 0.00058207998517900705 s
+ Excuetion Time on CPU: 0.00627999985590577126 s
+ Speed up = 10.788895
+ ======================================
+

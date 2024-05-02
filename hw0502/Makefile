@@ -1,8 +1,8 @@
 NVCC = nvcc
 
-TARGET = second_cuda4
+TARGET = second_cuda
 
-CUDA_SOURCE = second_cuda4.cu
+CUDA_SOURCE = second_cuda.cu
 
 rebuild: clean all
 

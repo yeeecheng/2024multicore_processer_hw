@@ -7,68 +7,76 @@
 #include <time.h>
 #include <cuda_runtime.h>
 
-#define NUM_THREADS 256
-#define BLOCK_SIZE 32
+
+#define BLOCK_SIZE	32
 
 __global__ static void matMultCUDA(const float* a, size_t lda, const float* b, size_t ldb, float* c, size_t ldc, int n)
 {
-	extern __shared__ float data[];
-	const int tid = threadIdx.x;
-	const int row = blockIdx.x;
-	int i,j;
-	
-	for(i = tid; i < n; i += blockDim.x){
-		data[i] = a[row * lda + i];
-	}
-	__syncthreads();
+	__shared__ float matA[BLOCK_SIZE][BLOCK_SIZE];
+	__shared__ float matB[BLOCK_SIZE][BLOCK_SIZE];
+	const int tidc = threadIdx.x;
+	const int tidr = threadIdx.y;
+	const int bidc = blockIdx.x * BLOCK_SIZE;
+	const int bidr = blockIdx.y * BLOCK_SIZE;
+	int i, j;
 
-    for(j = tid; j < n; j += blockDim.x)
-	{
-		float t=0;
-		float y=0;
-		for(i = 0; i < n; i++)
-		{
-			float r;
-			y -= data[i] * b[i * ldb + j];
-			r = t - y;
-			y = (r - t) + y;
-			t = r;
+	float results = 0;
+	float comp = 0;
+
+	for(j = 0; j < n; j += BLOCK_SIZE) {
+		matA[tidr][tidc] = a[(tidr + bidr) * lda + tidc + j];
+		matB[tidr][tidc] = b[(tidr + j) * ldb + tidc + bidc];
+
+		__syncthreads();
+
+		for(i = 0; i < BLOCK_SIZE; i++) {
+			float t;
+			comp -= matA[tidr][i] * matB[i][tidc];
+			t = results - comp;
+			comp = (t - results) + comp;
+			results = t;
 		}
-		c[row * ldc + j] = t;
+
+		__syncthreads();
 	}
+
+	c[(tidr + bidr) * ldc + tidc + bidc] = results;
 }
+
+
 
 clock_t matmultCUDA(const float* a, int lda, const float* b, int ldb, float* c, int ldc, int n)
 {
 	float *ac, *bc, *cc;
 	clock_t start, end;
 	size_t pitch_a, pitch_b, pitch_c;
-	
+	int newn = ((n + BLOCK_SIZE - 1) / BLOCK_SIZE) * BLOCK_SIZE;
+
 	start = clock();
-	cudaMallocPitch((void**) &ac, &pitch_a, sizeof(float) * n, n);
-	cudaMallocPitch((void**) &bc, &pitch_b, sizeof(float) * n, n);
-	cudaMallocPitch((void**) &cc, &pitch_c, sizeof(float) * n, n);
+	cudaMallocPitch((void**) &ac, &pitch_a, sizeof(float) * newn, newn);
+	cudaMallocPitch((void**) &bc, &pitch_b, sizeof(float) * newn, newn);
+	cudaMallocPitch((void**) &cc, &pitch_c, sizeof(float) * newn, newn);
+
+	cudaMemset(ac, 0, pitch_a * newn);
+	cudaMemset(bc, 0, pitch_b * newn);
 
 	cudaMemcpy2D(ac, pitch_a, a, sizeof(float) * lda, sizeof(float) * n, n, cudaMemcpyHostToDevice);
 	cudaMemcpy2D(bc, pitch_b, b, sizeof(float) * ldb, sizeof(float) * n, n, cudaMemcpyHostToDevice);
-	matMultCUDA<<<n, NUM_THREADS, sizeof(float) * n>>>
-        (ac, pitch_a / sizeof(float), bc, pitch_b / sizeof(float),
-        cc, pitch_c / sizeof(float), n);
 
-	//int blocks = (n + NUM_THREADS - 1) / NUM_THREADS;
-	//matMultCUDA<<<blocks * n, NUM_THREADS>>> (ac, n, bc, n, cc, n, n);
-	//matMultCUDA<<<n, NUM_THREADS, sizeof(float) * n>>>(ac, n, bc, n, cc, n, n);
+	int bx = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
+	dim3 blocks(bx, bx);
+	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+	matMultCUDA<<<blocks, threads>>>(ac, pitch_a / sizeof(float), bc, pitch_b / sizeof(float), cc, pitch_c / sizeof(float), n);
 
-	//cudaMemcpy2D(c, sizeof(float)*ldc, cc, sizeof(float) * n,  sizeof(float) * n, n, cudaMemcpyDeviceToHost);
-	//cudaMemcpy2D(c, sizeof(float) * ldc, cc, sizeof(float) * n, sizeof(float) *n, n, cudaMemcpyDeviceToHost);
-	cudaMemcpy2D(c, sizeof(float) * ldc, cc, pitch_c,
-        sizeof(float) * n, n, cudaMemcpyDeviceToHost);
+	cudaMemcpy2D(c, sizeof(float) * ldc, cc, pitch_c, sizeof(float) * n, n, cudaMemcpyDeviceToHost);
 
 	cudaFree(ac);
 	cudaFree(bc);
 	cudaFree(cc);
+
 	end = clock();
-	return end-start;
+
+	return end - start;
 }
 
 
@@ -93,8 +101,7 @@ void matgen(float* a, int lda, int n)
 	int i, j;
 
 	for(i = 0; i < n; i++) {
-		for(j = 0; j < n; j++) 
-		{
+		for(j = 0; j < n; j++) {
 			a[i * lda + j] = (float) rand() / RAND_MAX + (float) rand() / (RAND_MAX * RAND_MAX);
 		}
 	}

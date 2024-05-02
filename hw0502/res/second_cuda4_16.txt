@@ -1,0 +1,2 @@
+Max error: 1.19209e-07  Average error: 9.72329e-10
+Time used: 0.0158   (126.77 GFLOPS)

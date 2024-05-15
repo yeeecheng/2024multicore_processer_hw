@@ -1,8 +1,8 @@
 NVCC = nvcc
 
-TARGET = main
+TARGET = main1
 
-CUDA_SOURCE = main.cu
+CUDA_SOURCE = main1.cu
 
 rebuild: clean all
 

@@ -5,7 +5,7 @@
 #include <string.h>
 #include <math.h>
 
-#define BLOCK_SIZE 256
+#define BLOCK_SIZE 32
 
 int* ChkMatSize(char* str, int& n, int& m){
     char* substr = strtok(str, "_");
@@ -65,9 +65,10 @@ bool InitCUDA(){
     return true;
 }
 
-__global__ static void CalPCC_CUDA(int s_r, int s_c, const int* target, int t_r, int t_c, float* mat_std_x, float sum_s_sqr){
+__global__ static void CalPCC_CUDA(int s_r, int s_c, const int* target, int t_r, int t_c, float* mat_std_x, float* sum_s_sqr){
     int blockId = blockIdx.y * gridDim.x + blockIdx.x;
     int threadId = blockId * blockDim.x * blockDim.y + threadIdx.y * blockDim.x + threadIdx.x;
+    
     if(threadId >= t_r * t_c){
         return;
     }
@@ -86,63 +87,115 @@ __global__ static void CalPCC_CUDA(int s_r, int s_c, const int* target, int t_r,
         }
     }
 
-    float res = sum_xy / (sqrt(sum_t_sqr) * sqrt(sum_s_sqr));
+    float res = sum_xy / (sqrt(sum_t_sqr) * sqrt(*sum_s_sqr));
     if(fabs(res - 1.0) < 0.000001){
         printf(" (%d, %d)\n", threadId / t_c, threadId % t_c);
     }
 } 
 
 
-void CalSource_CUDA(const int* source, int s_r, int s_c, float*& mat_std_s, float& sum_s_sqr){
-    
-    float sum_s = 0;
-    for(int i = 0; i < s_r; i++){
-        for(int j = 0; j < s_c; j++){
-	     sum_s += source[i * s_c + j];
-	}
+__global__ static void CalSource_CUDA(const int* source, int s_r, int s_c, float* mat_std_s, float* sum_s_sqr){
+    extern __shared__ char shared_data[];
+
+    int* source_shr = (int*)shared_data;
+    float* sum_sqr = (float*)&source_shr[s_r * s_c + 1];
+
+    int blockId = blockIdx.y * gridDim.x + blockIdx.x;
+    int tid = threadIdx.y * blockDim.x + threadIdx.x;
+    if(tid > s_r * s_c || blockId != 0){
+        return;
     }
-    float avg_s = sum_s / (s_r * s_c);
-    for(int i = 0; i < s_r; i++){
-    	for(int j = 0; j < s_c; j++){
-	    int ii = i * s_c + j;
-	    float num = source[ii] - avg_s;
-	    sum_s_sqr += num * num;
-	    mat_std_s[ii] = num;
-	}
+    if(tid == s_r * s_c){
+        source_shr[tid] = 0;
+	return;
     }
+    source_shr[tid] = source[tid];
+    __syncthreads();
+    int d = (s_r * s_c + 1) / 2;
+    for (int i = d; i > 1;  i = (i + 1) / 2){
+	if(tid < i){
+            source_shr[tid] += source_shr[tid + i];
+        }
+        else{
+            source_shr[tid] = 0;
+        }
+	__syncthreads();
+    }
+    if(tid == 0){
+    	source_shr[0] += source_shr[1];
+    }
+    __syncthreads();
+    __shared__ float avg_s;
+    avg_s = source_shr[0] /(float)(s_r * s_c);
+    float num = source[tid] - avg_s;
+    mat_std_s[tid] = num;
+    sum_sqr[tid] = num * num;
+    __syncthreads();
+
+    for (int i = d; i > 1;  i = (i + 1) / 2){
+        if(tid < i){
+            sum_sqr[tid] += sum_sqr[tid + i];
+        }
+        else{
+            sum_sqr[tid] = 0;
+        }
+	__syncthreads();
+    }
+    if(tid == 0){
+        *sum_s_sqr = sum_sqr[0] + sum_sqr[1];
+    }
+    __syncthreads();
 }
+
+    
+ 
+
 int padding(int n){
     return ((n + BLOCK_SIZE - 1) / BLOCK_SIZE) * BLOCK_SIZE;
 }
 
 clock_t PCC_CUDA(const int* source, int s_r, int s_c, const int* target, int t_r, int t_c, float* mat_std_s){
     
-    int *target_c;
+    int *source_c, *target_c;
     float *mat_std_s_c;
 
     clock_t start, end;
     cudaError_t R; 
-    
+    float* sum_s_sqr;
     start = clock();
     
+    R = cudaMalloc((void**)&source_c, sizeof(int) * s_c * s_r);
+    printf(" Malloc source_c: %s\n",cudaGetErrorString(R));
+
     R = cudaMalloc((void **)&target_c, sizeof(int) * t_c * t_r);
     printf(" Malloc target_c : %s\n",cudaGetErrorString(R));
     
     R = cudaMalloc((void **)&mat_std_s_c, sizeof(float) * s_c * s_r);
     printf(" Malloc mat_std_s_c : %s\n",cudaGetErrorString(R));
     
+    R = cudaMalloc((void**)&sum_s_sqr, sizeof(float));
+    printf(" Malloc sum_s_sqr : %s\n",cudaGetErrorString(R));
+
+    R = cudaMemcpy(source_c, source, sizeof(int) * s_c * s_r, cudaMemcpyHostToDevice);
+    printf(" Memcpy source_c: %s\n", cudaGetErrorString(R));
+
     R = cudaMemcpy(target_c, target, sizeof(int) * t_c * t_r, cudaMemcpyHostToDevice);
     printf(" Memcpy target_c : %s\n",cudaGetErrorString(R));
     
-    float sum_s_sqr = 0;
+    R = cudaMemcpy(mat_std_s_c, mat_std_s, sizeof(float) * s_c * s_r, cudaMemcpyHostToDevice);
+    printf(" Memcpy mat_std_s_c : %s\n", cudaGetErrorString(R));
+    
+    float h_sum = 0.0f;
+    R = cudaMemcpy(sum_s_sqr,&h_sum, sizeof(float), cudaMemcpyHostToDevice);
+    printf(" Memcpy sum_s_sqr : %s\n", cudaGetErrorString(R));
+    
     int bx = (t_c + BLOCK_SIZE - 1) / BLOCK_SIZE, by = (t_r + BLOCK_SIZE - 1) / BLOCK_SIZE;
     dim3 blocks(bx, by);
     dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
     printf(" bx: %d, by: %d, BLOCK_SIZE: %d\n", bx, by, BLOCK_SIZE);
-    
-    CalSource_CUDA(source, s_r, s_c, mat_std_s, sum_s_sqr);
-    R = cudaMemcpy(mat_std_s_c, mat_std_s, sizeof(float) * s_c * s_r, cudaMemcpyHostToDevice);
-    printf(" Memcpy mat_std_s_c : %s\n", cudaGetErrorString(R));
+    int dynamic_size = (s_r * s_c + 1) * sizeof(int) + (s_r * s_c + 1) * sizeof(float);
+    CalSource_CUDA<<<blocks, threads, (s_r * s_c + 1) * sizeof(int) + (s_r * s_c + 1) * sizeof(float)>>>(source_c, s_r, s_c, mat_std_s_c, sum_s_sqr);
+   
     CalPCC_CUDA<<<blocks, threads>>>(s_r, s_c, target_c, t_r, t_c, mat_std_s_c, sum_s_sqr);
     
     end = clock();

@@ -5,7 +5,7 @@
 #include <string.h>
 #include <math.h>
 
-#define BLOCK_SIZE 32
+#define BLOCK_SIZE 256
 
 int* ChkMatSize(char* str, int& n, int& m){
     char* substr = strtok(str, "_");
@@ -306,8 +306,9 @@ clock_t SSD_CPU(int* source, int s_r, int s_c, int* target, int t_r, int t_c){
 
 int main(int argc, char *argv[]){
     
-    
+    printf(" Block size: %d\n", BLOCK_SIZE); 
     if(!InitCUDA()){
+    //cudaFree(source_c);
       return 0;
     }
     char* source_file = argv[1], * target_file = argv[2];

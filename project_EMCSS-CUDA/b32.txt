@@ -1,0 +1,134 @@
+rm -f main
+nvcc main.cu -o main
+
+**** Dataset 1 ****
+ Block size: 32
+ mat size: 3 3
+ mat size: 3750 4320
+
+//// CPU PCC ////
+ (581, 1280)
+ CPU PCC Time used: 2.07172899999999993170263223873917013406754
+
+//// CUDA PCC ////
+ Malloc target_c : no error
+ Malloc mat_std_s_c : no error
+ Memcpy target_c : no error
+ bx: 135, by: 118, BLOCK_SIZE: 32
+ Memcpy mat_std_s_c : no error
+ (581, 1280)
+ CUDA PCC Time used: 0.00918000000000000065947247662734298501164
+
+//// CPU SSD ////
+ (581, 1280)
+ CPU SSD Time used: 0.61557799999999995854693679575575515627861
+
+//// CUDA SSD ////
+ Malloc source_c: no error
+ Malloc target_c: no error
+ Memcpy source_c: no error
+ Memcpy target_c: no error
+ bx: 135, by: 118, BLOCK_SIZE: 32
+ (581, 1280)
+ CUDA SSD Time used: 0.0070
+
+
+**** Dataset 2 ****
+ Block size: 32
+ mat size: 5 5
+ mat size: 7750 1320
+
+//// CPU PCC ////
+ (7691, 688)
+ CPU PCC Time used: 3.23227699999999984470377967227250337600708
+
+//// CUDA PCC ////
+ Malloc target_c : no error
+ Malloc mat_std_s_c : no error
+ Memcpy target_c : no error
+ bx: 42, by: 243, BLOCK_SIZE: 32
+ Memcpy mat_std_s_c : no error
+ (7691, 688)
+ CUDA PCC Time used: 0.00669900000000000009348077867343818070367
+
+//// CPU SSD ////
+ (7691, 688)
+ CPU SSD Time used: 1.08773800000000009369216513732681050896645
+
+//// CUDA SSD ////
+ Malloc source_c: no error
+ Malloc target_c: no error
+ Memcpy source_c: no error
+ Memcpy target_c: no error
+ bx: 42, by: 243, BLOCK_SIZE: 32
+ (7691, 688)
+ CUDA SSD Time used: 0.0044
+
+
+**** Dataset 3 ****
+ Block size: 32
+ mat size: 3 3
+ mat size: 8140 9925
+
+//// CPU PCC ////
+ (2800, 6)
+ (4653, 4239)
+ CPU PCC Time used: 10.35853200000000029490365704987198114395142
+
+//// CUDA PCC ////
+ Malloc target_c : no error
+ Malloc mat_std_s_c : no error
+ Memcpy target_c : no error
+ bx: 311, by: 255, BLOCK_SIZE: 32
+ Memcpy mat_std_s_c : no error
+ (2800, 6)
+ (4653, 4239)
+ CUDA PCC Time used: 0.03715399999999999952615681308998318854719
+
+//// CPU SSD ////
+ (2800, 6)
+ (4653, 4239)
+ CPU SSD Time used: 3.07738699999999987255705491406843066215515
+
+//// CUDA SSD ////
+ Malloc source_c: no error
+ Malloc target_c: no error
+ Memcpy source_c: no error
+ Memcpy target_c: no error
+ bx: 311, by: 255, BLOCK_SIZE: 32
+ (2800, 6)
+ (4653, 4239)
+ CUDA SSD Time used: 0.0336
+
+
+**** Dataset 4 ****
+ Block size: 32
+ mat size: 5 5
+ mat size: 50 50
+
+//// CPU PCC ////
+ (18, 17)
+ CPU PCC Time used: 0.00067800000000000000023592239273284576484
+
+//// CUDA PCC ////
+ Malloc target_c : no error
+ Malloc mat_std_s_c : no error
+ Memcpy target_c : no error
+ bx: 2, by: 2, BLOCK_SIZE: 32
+ Memcpy mat_std_s_c : no error
+ (18, 17)
+ CUDA PCC Time used: 0.00219799999999999986707854837675313319778
+
+//// CPU SSD ////
+ (18, 17)
+ CPU SSD Time used: 0.00022900000000000000975435010541758629188
+
+//// CUDA SSD ////
+ Malloc source_c: no error
+ Malloc target_c: no error
+ Memcpy source_c: no error
+ Memcpy target_c: no error
+ bx: 2, by: 2, BLOCK_SIZE: 32
+ (18, 17)
+ CUDA SSD Time used: 0.0001
+

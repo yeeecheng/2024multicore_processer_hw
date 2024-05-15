@@ -6,7 +6,6 @@
 #include <math.h>
 
 #define BLOCK_SIZE 32
-float** arr;
 
 int* ChkMatSize(char* str, int& n, int& m){
     char* substr = strtok(str, "_");
@@ -37,7 +36,6 @@ FILE* ReadFile(char* file){
     }
     return f;
 }
-
 
 
 bool InitCUDA(){
@@ -119,14 +117,14 @@ int padding(int n){
 }
 
 clock_t PCC_CUDA(const int* source, int s_r, int s_c, const int* target, int t_r, int t_c, float* mat_std_s){
-    int *source_c, *target_c;
+    
+    int *target_c;
     float *mat_std_s_c;
 
     clock_t start, end;
-    size_t pitch_s, pitch_t, pitch_std_s;
     cudaError_t R; 
-    start = clock();
     
+    start = clock();
     
     R = cudaMalloc((void **)&target_c, sizeof(int) * t_c * t_r);
     printf(" Malloc target_c : %s\n",cudaGetErrorString(R));
@@ -137,12 +135,12 @@ clock_t PCC_CUDA(const int* source, int s_r, int s_c, const int* target, int t_r
     R = cudaMemcpy(target_c, target, sizeof(int) * t_c * t_r, cudaMemcpyHostToDevice);
     printf(" Memcpy target_c : %s\n",cudaGetErrorString(R));
     
-
     float sum_s_sqr = 0;
     int bx = (t_c + BLOCK_SIZE - 1) / BLOCK_SIZE, by = (t_r + BLOCK_SIZE - 1) / BLOCK_SIZE;
     dim3 blocks(bx, by);
     dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
     printf(" bx: %d, by: %d, BLOCK_SIZE: %d\n", bx, by, BLOCK_SIZE);
+    
     CalSource_CUDA(source, s_r, s_c, mat_std_s, sum_s_sqr);
     R = cudaMemcpy(mat_std_s_c, mat_std_s, sizeof(float) * s_c * s_r, cudaMemcpyHostToDevice);
     printf(" Memcpy mat_std_s_c : %s\n", cudaGetErrorString(R));
@@ -150,11 +148,11 @@ clock_t PCC_CUDA(const int* source, int s_r, int s_c, const int* target, int t_r
     CalPCC_CUDA<<<blocks, threads>>>(s_r, s_c, target_c, t_r, t_c, mat_std_s_c, sum_s_sqr);
     
     end = clock();
-    //cudaFree(source_c);
+    
     cudaFree(target_c);
     cudaFree(mat_std_s_c);
+    
     return end - start;
-
 }
 
 float PCC_CPU(float* mat_std_s, int* mat_y, int s_r, int s_c, int t_r, int t_c, int offset_x, int offset_y, float& sum_x_sqr){
@@ -201,6 +199,111 @@ float* CalSource_CPU(int* source, int s_r, int s_c, float& sum_s_sqr){
     return mat;
 }
 
+clock_t PCC_CPU(int* source, int s_r, int s_c, int* target, int t_r, int t_c){
+    
+    clock_t start, end;
+    start = clock();
+    
+    float sum_s_sqr = 0;
+    float* mat_std_s = CalSource_CPU(source, s_r, s_c, sum_s_sqr);
+    
+    for(int i = 0; i < t_r - s_r + 1; i++){
+        for(int j = 0; j < t_c - s_c + 1; j++){
+	   float res = PCC_CPU(mat_std_s, target, s_r, s_c, t_r, t_c, j, i, sum_s_sqr);
+	   if(fabs(res - 1.0) < 0.000001){
+	       printf(" (%d, %d)\n", i, j);
+	   }
+	}
+    }
+
+    end = clock();
+    
+    free(mat_std_s);
+
+    return end - start;
+}
+
+__global__ static void CalSSD_CUDA(const int* source, int s_r, int s_c, const int* target, int t_r, int t_c){
+    int blockId = blockIdx.y * gridDim.x + blockIdx.x;
+    int threadId = blockId * blockDim.x * blockDim.y + threadIdx.y * blockDim.x + threadIdx.x;
+
+    if(threadId >= t_r * t_c){
+        return;
+    }
+
+    float sum_xy = 0;
+    for(int i = 0; i < s_r; i++){
+        for(int j = 0; j < s_c; j++){
+	    float num = source[i * s_c + j] - target[threadId + t_c * i + j];
+	    sum_xy += num * num;
+	}
+    }
+
+    if(sum_xy == 0){
+        printf(" (%d, %d)\n", threadId / t_c, threadId % t_c);
+    }
+}
+
+clock_t SSD_CUDA(int* source, int s_r, int s_c, int* target, int t_r, int t_c){
+
+    int *source_c, *target_c;
+    clock_t start, end;
+    cudaError_t R;
+    start = clock();
+
+    R = cudaMalloc((void**)&source_c, sizeof(int) * s_c * s_r);
+    printf(" Malloc source_c: %s\n", cudaGetErrorString(R));
+
+    R = cudaMalloc((void**)&target_c, sizeof(int) * t_c * t_r);
+    printf(" Malloc target_c: %s\n", cudaGetErrorString(R));
+    
+    R = cudaMemcpy(source_c, source, sizeof(int) * s_c * s_r, cudaMemcpyHostToDevice);
+    printf(" Memcpy source_c: %s\n", cudaGetErrorString(R));
+
+    R = cudaMemcpy(target_c, target, sizeof(int) * t_c * t_r, cudaMemcpyHostToDevice);
+    printf(" Memcpy target_c: %s\n", cudaGetErrorString(R));
+
+    int bx = (t_c + BLOCK_SIZE - 1) / BLOCK_SIZE, by = (t_r + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    dim3 blocks(bx, by);
+    dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+    printf(" bx: %d, by: %d, BLOCK_SIZE: %d\n", bx, by, BLOCK_SIZE);
+    CalSSD_CUDA<<<blocks, threads>>>(source_c, s_r, s_c, target_c, t_r, t_c);
+    
+    end = clock();
+    
+    cudaFree(target_c);
+    cudaFree(source_c);
+
+    return end - start;
+}
+
+clock_t SSD_CPU(int* source, int s_r, int s_c, int* target, int t_r, int t_c){
+    
+    clock_t start, end;
+
+    start = clock();
+    float sum_xy = 0;
+    for(int i = 0; i < t_r - s_r + 1; i++){
+        for(int j = 0; j < t_c - s_c + 1; j++){
+	    sum_xy = 0;
+	    for(int ii = 0; ii < s_r; ii++){
+	        for(int jj = 0; jj < s_c; jj++){
+		     float num = source[ii * s_c + jj] - target[i * t_c + j + ii * t_c + jj];
+		     sum_xy += (num * num);
+		}
+	    }
+
+	    if(sum_xy == 0){
+	        printf(" (%d, %d)\n", i, j);
+	    } 
+	}
+    }
+
+    end = clock();
+    return end - start;
+   
+}
+
 int main(int argc, char *argv[]){
     
     
@@ -230,34 +333,42 @@ int main(int argc, char *argv[]){
 
     fclose(s_f);
     fclose(t_f);
-    clock_t start, end;
-    start = clock();
-    float sum_s_sqr = 0;
-    float* mat_std_s = CalSource_CPU(s_mat, s_n, s_m, sum_s_sqr);
-    for(int i = 0; i < t_n - s_n + 1; i++){
-    	for(int j = 0; j < t_m - s_m + 1; j++){
-	    float res = PCC_CPU(mat_std_s, t_mat, s_n, s_m, t_n, t_m, j, i, sum_s_sqr);
- 	    if(fabs(res - 1.0) < 0.000001){    
-	        printf(" (%d, %d)\n", i, j); 
-	    }
-	}
-    }
-    end = clock();
-    double sec = (double)(end - start) / CLOCKS_PER_SEC;
-    printf(" CPU Time used: %.41f\n", sec);
+
+    clock_t time;
+    double sec;
     
+    // CPU PCC
+    printf("\n//// CPU PCC ////\n");
+    time = PCC_CPU(s_mat, s_n, s_m, t_mat, t_n, t_m);
+    sec = (double)time / CLOCKS_PER_SEC;
+    printf(" CPU PCC Time used: %.41f\n\n", sec);
+    
+
+    // CUDA PCC
+    printf("//// CUDA PCC ////\n");
     float* mat_std_s_cuda = (float*) malloc(sizeof(float) * t_n * t_m);
-    clock_t time = PCC_CUDA(s_mat, s_n, s_m, t_mat, t_n , t_m, mat_std_s_cuda);
+    time = PCC_CUDA(s_mat, s_n, s_m, t_mat, t_n , t_m, mat_std_s_cuda);
     
     sec = (double) time / CLOCKS_PER_SEC;
-    printf(" CUDA Time used: %.41f\n", sec);
+    printf(" CUDA PCC Time used: %.41f\n\n", sec);
     
     free(mat_std_s_cuda);
-    free(mat_std_s);
+    
+    // CPU SSD
+    printf("//// CPU SSD ////\n");
+    time = SSD_CPU(s_mat, s_n, s_m, t_mat, t_n, t_m);
+    sec = (double) time / CLOCKS_PER_SEC;
+    printf(" CPU SSD Time used: %.41f\n\n", sec);
+    
+
+    // CUDA SSD
+    printf("//// CUDA SSD ////\n");
+    time = SSD_CUDA(s_mat, s_n, s_m, t_mat, t_n, t_m);
+    sec = (double) time / CLOCKS_PER_SEC;
+    printf(" CUDA SSD Time used: %.4lf\n\n", sec);
+
     free(s_mat);
     free(t_mat);
     return 0;
-
-
 
 }

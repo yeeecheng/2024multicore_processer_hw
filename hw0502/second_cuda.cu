@@ -8,7 +8,7 @@
 #include <cuda_runtime.h>
 
 
-#define BLOCK_SIZE	32
+#define BLOCK_SIZE	8
 
 __global__ static void matMultCUDA(const float* a, size_t lda, const float* b, size_t ldb, float* c, size_t ldc, int n)
 {

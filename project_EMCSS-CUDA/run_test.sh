@@ -13,3 +13,7 @@ echo -e "\n**** Dataset 3 ****"
 
 echo -e "\n**** Dataset 4 ****"
 ./main2 ./dataset/4/S4_5_5.txt ./dataset/4/T4_50_50.txt
+
+
+echo -e "\n**** Dataset 5 ****"
+./main2 ./testset/S5_6_6.txt ./testset/T5_2500_750.txt

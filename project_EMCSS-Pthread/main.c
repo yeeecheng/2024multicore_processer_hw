@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 
 typedef struct Param {
     
@@ -21,8 +22,6 @@ typedef struct Param {
 FILE* ReadFile(char*);
 int* ChkMatSize(char*, int* , int*);
 
-void Thread1(Param*);
-void* Thread1_PCC(void*);
 
 void Thread_Start(Param*, char*,  int);
 void* Thread_PCC(void*);
@@ -43,13 +42,13 @@ int main(int argc, char* argv[]){
     int num, idx = 0;
     while(fscanf(s_f, "%d, " , &num) != EOF){
         s_mat[idx] = num;
-	idx++;
+        idx++;
     }
 
     idx = 0;
     while(fscanf(t_f, "%d, ", &num) != EOF){
         t_mat[idx] = num;
-	idx++;
+        idx++;
     }
 
     fclose(s_f);
@@ -64,8 +63,8 @@ int main(int argc, char* argv[]){
     param.t_c = t_c;
     param.s_r = s_r;
     param.s_c = s_c;  
-    // calculate
-    //Thread1(&param);
+
+    // calculation
     
     Thread_Start(&param, mode, num_thread);
     
@@ -88,20 +87,20 @@ int* ChkMatSize(char* str, int* n, int* m){
     char* substr = strtok(str, "_");
     int cnt = 0;
     while(substr != NULL){
-	if(cnt == 1){
-	  *n = atoi(substr);
-	}
-	else if(cnt == 2){
-	  substr = strtok(substr, ".");
-	  *m = atoi(substr);
-	  break;
-	}
-    	substr = strtok(NULL, "_");
-    	cnt ++;
+        if(cnt == 1){
+	        *n = atoi(substr);
+        }
+        else if(cnt == 2){
+            substr = strtok(substr, ".");
+	        *m = atoi(substr);
+            break;
+        }
+        substr = strtok(NULL, "_");
+        cnt ++;
     }
     printf("mat size: %d %d\n", *n , *m);
     int* mat = (int*)malloc((*n) * (*m) * sizeof(int));
-   
+
     return mat;
 }
 
@@ -114,27 +113,26 @@ void Thread_Start(Param* param, char* mode,  int num_thread){
     param->num_thread = num_thread;
     int rc;
     for(int i = 0; i < num_thread; i++){
+        Param* param_copy = malloc(sizeof(Param));
+        param_copy->s_mat = param->s_mat;
+        param_copy->t_mat = param->t_mat;
+        param_copy->s_r = param->s_r;
+        param_copy->s_c = param->s_c;
+        param_copy->t_r = param->t_r;
+        param_copy->t_c = param->t_c;
+        param_copy->num_thread = num_thread;
+        param_copy->tid = i;
+        if(mode == "PCC"){
+                rc = pthread_create(&thread[i], NULL, Thread_PCC, (void*) param_copy);
+        } 
+        else{
+            rc = pthread_create(&thread[i], NULL, Thread_SSD, (void*) param_copy);	
+        }
 
-    	Param* param_copy = malloc(sizeof(Param));
-	param_copy->s_mat = param->s_mat;
-	param_copy->t_mat = param->t_mat;
-	param_copy->s_r = param->s_r;
-	param_copy->s_c = param->s_c;
-	param_copy->t_r = param->t_r;
-	param_copy->t_c = param->t_c;
-	param_copy->num_thread = num_thread;
-	param_copy->tid = i;
-	if(mode == "PCC"){
-            rc = pthread_create(&thread[i], NULL, Thread_PCC, (void*) param_copy);
-	} 
-	else{
-	    rc = pthread_create(&thread[i], NULL, Thread_SSD, (void*) param_copy);	
-	}
-
-	if(rc){
-	    printf("Error, %d\n", rc);
-	    exit(-1);
-	}
+        if(rc){
+            printf("Error, %d\n", rc);
+            exit(-1);
+        }
     }
 
     for(int i = 0; i < num_thread; i++){
@@ -154,37 +152,36 @@ void* Thread_PCC(void* arg){
     int x_sum = 0;
     for(int i = 0; i < s_r; i++){
         for(int j = 0; j < s_c; j++){
-	    x_sum += s_mat[i * s_c + j];
-	}
+            x_sum += s_mat[i * s_c + j];
+        }
     }
     for(int ti = tid; ti < t_r * t_c; ti += num_thread){
         int i = ti / t_c, j = ti % t_c;
         if(i >= t_r - s_r - 1 || j >= t_c - s_c -1){
-	    continue;
-	}
-	float xy_sum = 0, x_std = 0, y_std = 0;
-	int y_sum = 0;
-                       
-	for(int ii = 0; ii < s_r; ii++){
-	    for(int jj = 0; jj < s_c; jj++){
-	        y_sum += t_mat[i * t_c + j + ii * t_c + jj];
-	     }
+            continue;
         }
-	for(int ii = 0; ii < s_r; ii++){
-	    for(int jj = 0; jj < s_c; jj++){
-	        int x = ii * s_c + jj;
-		int y = i * t_c + j + ii * t_c + jj;
-		float x_diff = (float)s_mat[x] - (float)x_sum, y_diff = (float)t_mat[y] - (float)y_sum;
-		xy_sum += x_diff * y_diff;
-		x_std += x_diff * x_diff;
-		y_std += y_diff * y_diff;
-	     }
+        float xy_sum = 0, x_std = 0, y_std = 0;
+        int y_sum = 0;
+        for(int ii = 0; ii < s_r; ii++){
+            for(int jj = 0; jj < s_c; jj++){
+                y_sum += t_mat[i * t_c + j + ii * t_c + jj];
+            }
+        }
+        for(int ii = 0; ii < s_r; ii++){
+            for(int jj = 0; jj < s_c; jj++){
+                int x = ii * s_c + jj;
+                int y = i * t_c + j + ii * t_c + jj;
+                float x_diff = (float)s_mat[x] - (float)x_sum, y_diff = (float)t_mat[y] - (float)y_sum;
+		        xy_sum += x_diff * y_diff;
+		        x_std += x_diff * x_diff;
+		        y_std += y_diff * y_diff;
+            }
         }
 
         float res = xy_sum / (sqrt(x_std) * sqrt(y_std));
-	if((int)res == 1){
-	    printf("(%d, %d)\n", i, j);
-	}
+        if((int)res == 1){
+            printf("(%d, %d)\n", i, j);
+        }
     }
     pthread_exit(NULL);
 }
@@ -197,96 +194,24 @@ void* Thread_SSD(void* arg){
     int s_r = tmp.s_r, s_c = tmp.s_c, t_r = tmp.t_r, t_c = tmp.t_c;
     int num_thread = tmp.num_thread, tid = tmp.tid;
     for(int ti = tid; ti < t_r * t_c; ti += num_thread){
-	       
-	int i = ti / t_c, j = ti % t_c;
+        int i = ti / t_c, j = ti % t_c;
         if( i >= t_r - s_r + 1 || j >= t_c - s_c +1){
-	    continue;
-	}
+            continue;
+        }
         float xy_sum = 0;
-	for(int ii = 0; ii < s_r; ii++){
-	    for(int jj = 0; jj < s_c; jj++){
-		int x = ii * s_c + jj;
-		int y = i * t_c + j + ii * t_c + jj;
-		float diff = (float)s_mat[x] - (float)t_mat[y];
-		xy_sum += diff * diff;
-	    }
-	}   
-        
-	if((int)xy_sum == 0){
-	    printf("(%d, %d)\n", i, j);
-	}
+        for(int ii = 0; ii < s_r; ii++){
+            for(int jj = 0; jj < s_c; jj++){
+                int x = ii * s_c + jj;
+		        int y = i * t_c + j + ii * t_c + jj;
+                float diff = (float)s_mat[x] - (float)t_mat[y];
+                xy_sum += diff * diff;
+            }
+        }
+        if((int)xy_sum == 0){
+            printf("(%d, %d)\n", i, j);
+        }
     }
     
-    pthread_exit(NULL);
-}
-
-
-void Thread1(Param* param){
-
-    clock_t start, end;
-
-    start = clock();
-    
-    pthread_t thread;
-    int rc = pthread_create(&thread, NULL, Thread1_PCC,(void*) param);
-    if(rc){
-        printf("Error, %d\n", rc);
-	exit(-1);
-    }
-    pthread_join(thread, NULL);
-
-    end = clock();
-
-    printf("Use 1 Thread Time used: %.41f\n\n", (double)(end - start) / CLOCKS_PER_SEC);
-}
-
-void* Thread1_PCC(void* arg){
-    
-    printf("start thread1_pcc\n");
-
-    Param tmp = *(struct Param *)arg;
-    int* s_mat = tmp.s_mat,* t_mat = tmp.t_mat;
-    int s_r = tmp.s_r, s_c = tmp.s_c, t_r = tmp.t_r, t_c = tmp.t_c;
-
-    
-    int x_sum = 0;
-    for(int i = 0; i < s_r; i++){
-        for(int j = 0; j < s_c; j++){
-	    x_sum += s_mat[i * s_c + j];
-	}
-    }
-
-  
-   
-    for(int i = 0; i < t_r - s_r + 1; i++){
-        for(int j = 0; j < t_c - s_c + 1; j++){
-	    float xy_sum = 0, x_std = 0, y_std = 0;
-	    int y_sum = 0;
-	    
-	    for(int ii = 0; ii < s_r; ii++){
-	        for(int jj = 0; jj < s_c; jj++){
-		    y_sum += t_mat[i * t_c + j + ii * t_c + jj];
-		}
-	    }
-	    
-	    for(int ii = 0; ii < s_r; ii++){
-	        for(int jj = 0; jj < s_c; jj++){
-		    
-		    int x = ii * s_c + jj;
-		    int y  = i * t_c + j + ii * t_c + jj;
-		    float x_diff = (float)s_mat[x] - (float)x_sum, y_diff = (float)t_mat[y] - (float)y_sum;
-		    xy_sum += x_diff * y_diff;
-		    x_std += x_diff * x_diff;
-		    y_std += y_diff * y_diff;
-		}
-	    }
-	    float res = xy_sum / (sqrt(x_std) * sqrt(y_std));
-
-	    if((int)res  == 1){
-	        printf("(%d, %d)\n", i, j); 
-	    }
-	}
-    }
     pthread_exit(NULL);
 }
 

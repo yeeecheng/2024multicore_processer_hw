@@ -1,0 +1,310 @@
+rm -f main
+gcc main.c -o main -lpthread -lm
+
+**** Dataset 1 ****
+mat size: 3 3
+mat size: 3750 4320
+
+(581, 1280)
+In PCC, Use 1 Thread Time used: 0.63900000000000001000000000000000000000000
+
+mat size: 3 3
+mat size: 3750 4320
+
+(581, 1280)
+In PCC, Use 2 Thread Time used: 0.40300000000000002000000000000000000000000
+
+mat size: 3 3
+mat size: 3750 4320
+
+(581, 1280)
+In PCC, Use 3 Thread Time used: 0.24199999999999999000000000000000000000000
+
+mat size: 3 3
+mat size: 3750 4320
+
+(581, 1280)
+In PCC, Use 4 Thread Time used: 0.18900000000000000000000000000000000000000
+
+mat size: 3 3
+mat size: 3750 4320
+
+(581, 1280)
+In PCC, Use 5 Thread Time used: 0.16600000000000001000000000000000000000000
+
+mat size: 3 3
+mat size: 3750 4320
+
+(581, 1280)
+In PCC, Use 6 Thread Time used: 0.16300000000000001000000000000000000000000
+
+mat size: 3 3
+mat size: 3750 4320
+
+(581, 1280)
+In PCC, Use 7 Thread Time used: 0.15200000000000000000000000000000000000000
+
+mat size: 3 3
+mat size: 3750 4320
+
+(581, 1280)
+In PCC, Use 8 Thread Time used: 0.12800000000000000000000000000000000000000
+
+mat size: 3 3
+mat size: 3750 4320
+
+(581, 1280)
+In PCC, Use 9 Thread Time used: 0.12300000000000000000000000000000000000000
+
+mat size: 3 3
+mat size: 3750 4320
+
+(581, 1280)
+In PCC, Use 10 Thread Time used: 0.11700000000000001000000000000000000000000
+
+mat size: 3 3
+mat size: 3750 4320
+
+(581, 1280)
+In PCC, Use 11 Thread Time used: 0.11500000000000000000000000000000000000000
+
+mat size: 3 3
+mat size: 3750 4320
+
+(581, 1280)
+In PCC, Use 12 Thread Time used: 0.10600000000000000000000000000000000000000
+
+
+**** Dataset 2 ****
+mat size: 5 5
+mat size: 7750 1320
+
+(7691, 688)
+In PCC, Use 1 Thread Time used: 1.01499999999999990000000000000000000000000
+
+mat size: 5 5
+mat size: 7750 1320
+
+(7691, 688)
+In PCC, Use 2 Thread Time used: 0.53400000000000003000000000000000000000000
+
+mat size: 5 5
+mat size: 7750 1320
+
+(7691, 688)
+In PCC, Use 3 Thread Time used: 0.36499999999999999000000000000000000000000
+
+mat size: 5 5
+mat size: 7750 1320
+
+(7691, 688)
+In PCC, Use 4 Thread Time used: 0.31300000000000000000000000000000000000000
+
+mat size: 5 5
+mat size: 7750 1320
+
+(7691, 688)
+In PCC, Use 5 Thread Time used: 0.23100000000000001000000000000000000000000
+
+mat size: 5 5
+mat size: 7750 1320
+
+(7691, 688)
+In PCC, Use 6 Thread Time used: 0.23400000000000001000000000000000000000000
+
+mat size: 5 5
+mat size: 7750 1320
+
+(7691, 688)
+In PCC, Use 7 Thread Time used: 0.19300000000000000000000000000000000000000
+
+mat size: 5 5
+mat size: 7750 1320
+
+(7691, 688)
+In PCC, Use 8 Thread Time used: 0.20000000000000001000000000000000000000000
+
+mat size: 5 5
+mat size: 7750 1320
+
+(7691, 688)
+In PCC, Use 9 Thread Time used: 0.17999999999999999000000000000000000000000
+
+mat size: 5 5
+mat size: 7750 1320
+
+(7691, 688)
+In PCC, Use 10 Thread Time used: 0.17799999999999999000000000000000000000000
+
+mat size: 5 5
+mat size: 7750 1320
+
+(7691, 688)
+In PCC, Use 11 Thread Time used: 0.16900000000000001000000000000000000000000
+
+mat size: 5 5
+mat size: 7750 1320
+
+(7691, 688)
+In PCC, Use 12 Thread Time used: 0.16300000000000001000000000000000000000000
+
+
+**** Dataset 3 ****
+mat size: 3 3
+mat size: 8140 9925
+
+(2800, 6)
+(4653, 4239)
+In PCC, Use 1 Thread Time used: 3.52400000000000000000000000000000000000000
+
+mat size: 3 3
+mat size: 8140 9925
+
+(2800, 6)
+(4653, 4239)
+In PCC, Use 2 Thread Time used: 2.01100000000000010000000000000000000000000
+
+mat size: 3 3
+mat size: 8140 9925
+
+(2800, 6)
+(4653, 4239)
+In PCC, Use 3 Thread Time used: 1.39700000000000000000000000000000000000000
+
+mat size: 3 3
+mat size: 8140 9925
+
+(2800, 6)
+(4653, 4239)
+In PCC, Use 4 Thread Time used: 1.18799999999999990000000000000000000000000
+
+mat size: 3 3
+mat size: 8140 9925
+
+(2800, 6)
+(4653, 4239)
+In PCC, Use 5 Thread Time used: 0.98999999999999999000000000000000000000000
+
+mat size: 3 3
+mat size: 8140 9925
+
+(2800, 6)
+(4653, 4239)
+In PCC, Use 6 Thread Time used: 0.85199999999999998000000000000000000000000
+
+mat size: 3 3
+mat size: 8140 9925
+
+(2800, 6)
+(4653, 4239)
+In PCC, Use 7 Thread Time used: 0.75300000000000000000000000000000000000000
+
+mat size: 3 3
+mat size: 8140 9925
+
+(2800, 6)
+(4653, 4239)
+In PCC, Use 8 Thread Time used: 0.68400000000000005000000000000000000000000
+
+mat size: 3 3
+mat size: 8140 9925
+
+(2800, 6)
+(4653, 4239)
+In PCC, Use 9 Thread Time used: 0.63900000000000001000000000000000000000000
+
+mat size: 3 3
+mat size: 8140 9925
+
+(2800, 6)
+(4653, 4239)
+In PCC, Use 10 Thread Time used: 0.66100000000000003000000000000000000000000
+
+mat size: 3 3
+mat size: 8140 9925
+
+(2800, 6)
+(4653, 4239)
+In PCC, Use 11 Thread Time used: 0.58599999999999997000000000000000000000000
+
+mat size: 3 3
+mat size: 8140 9925
+
+(2800, 6)
+(4653, 4239)
+In PCC, Use 12 Thread Time used: 0.69599999999999995000000000000000000000000
+
+
+**** Dataset 4 ****
+mat size: 5 5
+mat size: 50 50
+
+(18, 17)
+In PCC, Use 1 Thread Time used: 0.00000000000000000000000000000000000000000
+
+mat size: 5 5
+mat size: 50 50
+
+(18, 17)
+In PCC, Use 2 Thread Time used: 0.00000000000000000000000000000000000000000
+
+mat size: 5 5
+mat size: 50 50
+
+(18, 17)
+In PCC, Use 3 Thread Time used: 0.00000000000000000000000000000000000000000
+
+mat size: 5 5
+mat size: 50 50
+
+(18, 17)
+In PCC, Use 4 Thread Time used: 0.00100000000000000000000000000000000000000
+
+mat size: 5 5
+mat size: 50 50
+
+(18, 17)
+In PCC, Use 5 Thread Time used: 0.00100000000000000000000000000000000000000
+
+mat size: 5 5
+mat size: 50 50
+
+(18, 17)
+In PCC, Use 6 Thread Time used: 0.00000000000000000000000000000000000000000
+
+mat size: 5 5
+mat size: 50 50
+
+(18, 17)
+In PCC, Use 7 Thread Time used: 0.00000000000000000000000000000000000000000
+
+mat size: 5 5
+mat size: 50 50
+
+(18, 17)
+In PCC, Use 8 Thread Time used: 0.00100000000000000000000000000000000000000
+
+mat size: 5 5
+mat size: 50 50
+
+(18, 17)
+In PCC, Use 9 Thread Time used: 0.00100000000000000000000000000000000000000
+
+mat size: 5 5
+mat size: 50 50
+
+(18, 17)
+In PCC, Use 10 Thread Time used: 0.00000000000000000000000000000000000000000
+
+mat size: 5 5
+mat size: 50 50
+
+(18, 17)
+In PCC, Use 11 Thread Time used: 0.00100000000000000000000000000000000000000
+
+mat size: 5 5
+mat size: 50 50
+
+(18, 17)
+In PCC, Use 12 Thread Time used: 0.00100000000000000000000000000000000000000
+

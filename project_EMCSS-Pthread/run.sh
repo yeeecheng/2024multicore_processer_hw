@@ -5,12 +5,12 @@ make rebuild
 SOURCE=./main
 
 echo -e "\n**** Dataset 1 ****"
-for mode in  PCC SSD
+for mode in  SSD
 do 
 
     for i in {1..12}
     do 
-        $SOURCE ./dataset/1/S1_3_3.txt ./dataset/1/T1_3750_4320.txt $mode $i
+        $SOURCE ./dataset/1/S1_3_3.txt ./dataset/1/T1_3750_4320.txt $mode $i 
     done
 
     echo -e "\n**** Dataset 2 ****"
